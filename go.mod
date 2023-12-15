@@ -2,15 +2,15 @@ module changeme
 
 go 1.21
 
-toolchain go1.21.5
-
 require (
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
+	github.com/pquerna/otp v1.4.0
 	github.com/wailsapp/wails/v2 v2.7.1
 )
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
+	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/gen2brain/shm v0.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

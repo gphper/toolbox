@@ -1,8 +1,8 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'</script>
+import ToTp from './components/ToTp.vue'</script>
 
 <template>
-  <HelloWorld/>
+  <ToTp/>
 </template>
 
 <style>
