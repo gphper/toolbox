@@ -3,8 +3,6 @@
 
 export function Get():Promise<string>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function ScreenShot():Promise<string>;
 
 export function Storage(arg1:string):Promise<number>;

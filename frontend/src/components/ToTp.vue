@@ -38,7 +38,9 @@ function submitForm(){
   // 组装数据
   let data2Fa = "otpauth://totp/GitHub:"+form.account+"?secret="+form.secret
   data.qdata = data2Fa
-  Storage(data2Fa)
+  Storage(data2Fa).then().catch(err => {
+    //TODO
+  })
   // 生成验证码
   reloadTotp()
   addFormVisible.value = false
@@ -59,6 +61,11 @@ function screenShot(){
       data.img = result
       window.runtime.WindowShow()
       centerDialogVisible.value = true
+    }).catch(err => {
+      ElMessage({
+        message: '截图失败：' + err,
+        type: 'warning',
+      })
     })
   },300)
 }
@@ -135,6 +142,14 @@ function reloadTotp(){
 function totp(){
   Totp(data.qdata).then(result=>{
     data.code = result
+  }).catch(err => {
+    if (reloadTimeHandle != null){
+      clearInterval(reloadTimeHandle)
+    }
+    ElMessage({
+      message: err,
+      type: 'warning',
+    })
   })
 }
 
@@ -143,9 +158,14 @@ onMounted(() => {
   // 加载数据文件
   Get().then(result=>{
     data.qdata = result
-    if (data.qdata.value != ""){
+    if (result != ""){
       reloadTotp()
     } 
+  }).catch(err => {
+    ElMessage({
+        message: '获取数据失败：' + err,
+        type: 'warning',
+      })
   })
 })
 

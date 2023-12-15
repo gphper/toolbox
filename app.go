@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"fmt"
 	"image/png"
 	"os"
 	"time"
@@ -31,32 +30,29 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
 // 截屏
-func (a *App) ScreenShot() string {
+func (a *App) ScreenShot() (string, error) {
 
 	// 截取屏幕
 	img, err := screenshot.CaptureDisplay(0)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return "", err
 	}
 
 	// 将图像转换为字节数据
 	buf := new(bytes.Buffer)
 	if err := png.Encode(buf, img); err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return "", err
 	}
 
 	// 将字节数据转换为 base64 字符串
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
 // 生产验证码
-func (a *App) Totp(data string) string {
+func (a *App) Totp(data string) (string, error) {
 
 	// 获取当前时间
 	now := time.Now()
@@ -64,55 +60,54 @@ func (a *App) Totp(data string) string {
 	key, err := otp.NewKeyFromURL(data)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return "", err
 	}
 	// 生成验证码
-	totpCode, _ := totp.GenerateCode(key.Secret(), now)
+	totpCode, err := totp.GenerateCode(key.Secret(), now)
+	if err != nil {
+		runtime.LogError(a.ctx, err.Error())
+		return "", err
+	}
 
-	return totpCode
+	return totpCode, nil
 }
 
 // 数据存储
-func (a *App) Storage(data string) int {
+func (a *App) Storage(data string) (int, error) {
 	path := "toolbox.data"
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return 0, err
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			runtime.LogError(a.ctx, err.Error())
-		}
-	}(file)
+	defer file.Close()
 
 	n, err := file.Write([]byte(data))
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return 0, err
 	}
 
-	return n
+	return n, nil
 }
 
 // 数据获取
-func (a *App) Get() string {
+func (a *App) Get() (string, error) {
 
 	path := "toolbox.data"
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return "", err
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			runtime.LogError(a.ctx, err.Error())
-		}
-	}(file)
+	defer file.Close()
 
 	var allData = make([]byte, 1024)
 	n, err := file.Read(allData)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
+		return "", err
 	}
 
-	return string(allData[:n])
+	return string(allData[:n]), nil
 }

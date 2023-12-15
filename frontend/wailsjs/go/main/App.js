@@ -6,10 +6,6 @@ export function Get() {
   return window['go']['main']['App']['Get']();
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
-}
-
 export function ScreenShot() {
   return window['go']['main']['App']['ScreenShot']();
 }
