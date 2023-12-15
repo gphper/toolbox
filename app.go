@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"image/png"
+	"io"
 	"os"
 	"time"
 
@@ -104,7 +106,8 @@ func (a *App) Get() (string, error) {
 
 	var allData = make([]byte, 1024)
 	n, err := file.Read(allData)
-	if err != nil {
+
+	if err != nil && !errors.Is(err, io.EOF) {
 		runtime.LogError(a.ctx, err.Error())
 		return "", err
 	}
