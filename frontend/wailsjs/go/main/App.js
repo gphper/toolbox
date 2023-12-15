@@ -10,10 +10,6 @@ export function ScreenShot() {
   return window['go']['main']['App']['ScreenShot']();
 }
 
-export function Storage(arg1) {
-  return window['go']['main']['App']['Storage'](arg1);
-}
-
 export function Totp(arg1) {
   return window['go']['main']['App']['Totp'](arg1);
 }

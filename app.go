@@ -16,6 +16,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+var appData string
+
 // App struct
 type App struct {
 	ctx context.Context
@@ -71,11 +73,16 @@ func (a *App) Totp(data string) (string, error) {
 		return "", err
 	}
 
+	if appData != data {
+		appData = data
+		a.storage(data)
+	}
+
 	return totpCode, nil
 }
 
 // 数据存储
-func (a *App) Storage(data string) (int, error) {
+func (a *App) storage(data string) (int, error) {
 	path := "toolbox.data"
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {

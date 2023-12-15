@@ -1,6 +1,6 @@
 <script setup>
 import {reactive,onMounted} from 'vue'
-import {ScreenShot,Totp,Storage,Get} from '../../wailsjs/go/main/App'
+import {ScreenShot,Totp,Get} from '../../wailsjs/go/main/App'
 import jsQR from 'jsqr';
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -32,18 +32,21 @@ const rules = reactive({
 // 提交表单
 function submitForm(){
   formRef.value.validate((valid) => {
-    console.log(valid)
+    if (!valid){
+      return ""
+    }
+
+    // 组装数据
+    let data2Fa = "otpauth://totp/GitHub:"+form.account+"?secret="+form.secret
+    data.qdata = data2Fa
+    
+    // 生成验证码
+    if(reloadTotp()){
+      addFormVisible.value = false
+    }
+   
   })
-  
-  // 组装数据
-  let data2Fa = "otpauth://totp/GitHub:"+form.account+"?secret="+form.secret
-  data.qdata = data2Fa
-  Storage(data2Fa).then().catch(err => {
-    //TODO
-  })
-  // 生成验证码
-  reloadTotp()
-  addFormVisible.value = false
+
 }
 
 // 显示表单
@@ -116,10 +119,10 @@ function decodeQr(){
           type: 'success',
         })
         // 开始更新验证码
-        reloadTotp();
+        reloadTotp()
         // 隐藏弹窗
         centerDialogVisible.value = false
-        Storage(data.qdata)
+        
       } else {
         ElMessage({
           message: '未识别到二维码，请放大二维码区域重试',
@@ -131,17 +134,21 @@ function decodeQr(){
 
 // 定时加载生成验证码
 function reloadTotp(){
+  
   if (reloadTimeHandle != null){
     clearInterval(reloadTimeHandle)
   }
+
   totp()
   reloadTimeHandle = setInterval(totp,5000)
 }
 
 // 生成totp码
-function totp(){
+function totp() {
+
   Totp(data.qdata).then(result=>{
     data.code = result
+    
   }).catch(err => {
     if (reloadTimeHandle != null){
       clearInterval(reloadTimeHandle)
@@ -151,6 +158,7 @@ function totp(){
       type: 'warning',
     })
   })
+
 }
 
 
