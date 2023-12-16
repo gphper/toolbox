@@ -55,22 +55,28 @@ func (a *App) ScreenShot() (string, error) {
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
-// 生产验证码
-func (a *App) Totp(data string) (string, error) {
+type TotpRes struct {
+	Code string `json:"code"`
+	Url  string `json:"url"`
+}
 
+// 生产验证码
+func (a *App) Totp(data string) (TotpRes, error) {
+
+	var res TotpRes
 	// 获取当前时间
 	now := time.Now()
 	// 生成 TOTP 实例 otpauth://totp/GitHub:gphper?secret=
 	key, err := otp.NewKeyFromURL(data)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
-		return "", err
+		return res, err
 	}
 	// 生成验证码
 	totpCode, err := totp.GenerateCode(key.Secret(), now)
 	if err != nil {
 		runtime.LogError(a.ctx, err.Error())
-		return "", err
+		return res, err
 	}
 
 	if appData != data {
@@ -78,7 +84,10 @@ func (a *App) Totp(data string) (string, error) {
 		a.storage(data)
 	}
 
-	return totpCode, nil
+	res.Url = data
+	res.Code = totpCode
+
+	return res, nil
 }
 
 // 数据存储

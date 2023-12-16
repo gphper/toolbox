@@ -38,12 +38,10 @@ function submitForm(){
 
     // 组装数据
     let data2Fa = "otpauth://totp/GitHub:"+form.account+"?secret="+form.secret
-    data.qdata = data2Fa
     
     // 生成验证码
-    if(reloadTotp()){
-      addFormVisible.value = false
-    }
+    reloadTotp(data2Fa)
+    addFormVisible.value = false
    
   })
 
@@ -82,8 +80,8 @@ function screenCut(){
 }
 
 // 设置剪切板
-function copy(){
-  let s = window.runtime.ClipboardSetText(data.code)
+function copy(data){
+  let s = window.runtime.ClipboardSetText(data)
   if (s) {
       ElMessage({
         message: '复制成功',
@@ -112,14 +110,13 @@ function decodeQr(){
       const imageData = context.getImageData(0, 0, image.width, image.height);
       const code = jsQR(imageData.data, imageData.width, imageData.height);
       if (code) {
-        data.qdata = code.data
         // 在此处理识别到的二维码结果
         ElMessage({
           message: '识别到二维码内容：' + code.data,
           type: 'success',
         })
         // 开始更新验证码
-        reloadTotp()
+        reloadTotp(code.data)
         // 隐藏弹窗
         centerDialogVisible.value = false
         
@@ -133,22 +130,36 @@ function decodeQr(){
 }
 
 // 定时加载生成验证码
-function reloadTotp(){
+function reloadTotp(url){
   
   if (reloadTimeHandle != null){
     clearInterval(reloadTimeHandle)
   }
 
-  totp()
-  reloadTimeHandle = setInterval(totp,5000)
+  totp(url)
+  reloadTimeHandle = setInterval(totp(url),5000)
 }
 
 // 生成totp码
-function totp() {
+function totp(url) {
 
-  Totp(data.qdata).then(result=>{
-    data.code = result
-    
+  Totp(url).then(result=>{
+
+    data.code = result.code
+    data.qdata = result.url
+    // 识别处用户名
+    const regex = /otpauth:\/\/totp\/GitHub:([a-zA-Z0-9]+)\?secret=/;
+    const match = url.match(regex);
+    if (match) {
+      const username = match[1];
+      data.username = username;
+    } else {
+      ElMessage({
+        message: "数据格式错误",
+        type: 'warning',
+      })
+    }
+
   }).catch(err => {
     if (reloadTimeHandle != null){
       clearInterval(reloadTimeHandle)
@@ -161,14 +172,13 @@ function totp() {
 
 }
 
-
 onMounted(() => {
   // 加载数据文件
   Get().then(result=>{
     data.qdata = result
     if (result != ""){
-      reloadTotp()
-    } 
+      reloadTotp(result)
+    }
   }).catch(err => {
     ElMessage({
         message: '获取数据失败：' + err,
@@ -183,7 +193,6 @@ onMounted(() => {
   <main>
 
     <div style="padding-top: 10px;">
-
       <div class="main-header">
         <el-row >
           <el-col :span="6" :offset="6"><div class="grid-content ep-bg-purple" />
@@ -196,7 +205,6 @@ onMounted(() => {
       </div>
 
       <div class="main-body">
-          
           <el-row>
             <el-col :span="22" :offset="1">
               <el-card class="box-card">
@@ -213,19 +221,27 @@ onMounted(() => {
                     </div>
                   </el-col>
                   <el-col :span="2">
-                    <el-button type="success" link @click="copy">复制</el-button>
+                    <el-button type="success" link @click="copy(data.code)">复制</el-button>
                   </el-col>
                 </el-row>
+              </el-card>
+            </el-col>
 
+            <el-col :span="22" :offset="1">
+              <el-card class="box-card">
+                <el-row>
+                  <el-col :span="14" :offset="4">
+                    <el-input v-model="data.qdata" type="password" show-password required/>
+                  </el-col>
+                  <el-col :span="2">
+                    <el-button type="success" link @click="copy(data.qdata)">复制</el-button>
+                  </el-col>
+                </el-row>
               </el-card>
             </el-col>
           </el-row>
-
       </div>
-
     </div>
-
-
 
     <el-dialog v-model="centerDialogVisible" title="请选取二维码" width="80%" center>
       <span>
@@ -246,7 +262,6 @@ onMounted(() => {
         </span>
       </template>
     </el-dialog>
-
 
     <el-dialog v-model="addFormVisible" title="手动添加2FA" width="50%" center>
       <el-form 
