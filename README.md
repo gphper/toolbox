@@ -1,8 +1,12 @@
 # toolbox
-工具箱
+离线版 2FA 桌面生成工具
 
 # 注意！！！ 
 虽然这个工具可以直接拷贝到其他电脑上使用，但是在 github 下载的这个文件 github-recovery-codes.txt 还是非常重要的，一定要妥善保管 
+
+# 依赖
+* wails v2
+* github.com/pquerna/otp
 
 # 截图
 ![捕获1](https://github.com/gphper/toolbox/assets/18718299/ba52cea5-3a92-49df-812b-5e3d63050b09)
